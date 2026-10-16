@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PromHub Capturer — налаштування</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 13px;
+    color: #0a1f44;
+    background: #f5f6f8;
+    width: 360px;
+    padding: 16px;
+}
+.header {
+    background: #0a1f44;
+    color: #fff;
+    padding: 14px;
+    border-radius: 6px;
+    margin-bottom: 14px;
+    border-bottom: 2px solid #b8860b;
+}
+.header-title { font-weight: 700; font-size: 15px; }
+.header-subtitle { font-size: 11.5px; color: rgba(255,255,255,.7); margin-top: 2px; }
+.field { margin-bottom: 12px; }
+.field-label {
+    display: block;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #4d5b75;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    margin-bottom: 4px;
+}
+.field-input {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1.5px solid #b8c2d4;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: inherit;
+}
+.field-input:focus {
+    outline: none;
+    border-color: #2a4d85;
+    box-shadow: 0 0 0 3px rgba(58, 96, 152, .15);
+}
+.field-hint {
+    font-size: 11.5px;
+    color: #64748b;
+    margin-top: 4px;
+    line-height: 1.4;
+}
+.btn {
+    display: inline-block;
+    padding: 8px 14px;
+    border-radius: 4px;
+    border: 1.5px solid transparent;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    text-decoration: none;
+    text-align: center;
+}
+.btn-primary {
+    background: #0a1f44;
+    color: #fff;
+    border-color: #0a1f44;
+    width: 100%;
+    margin-top: 4px;
+}
+.btn-primary:hover { background: #122a52; }
+.btn-ghost {
+    background: #fff;
+    color: #4d5b75;
+    border-color: #b8c2d4;
+    width: 100%;
+    margin-top: 6px;
+}
+.btn-ghost:hover { background: #f4f6fb; }
+
+.status {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 4px;
+    font-size: 12.5px;
+    line-height: 1.5;
+    display: none;
+}
+.status.show { display: block; }
+.status-ok { background: #f0fdf4; border: 1px solid #bbf7d0; color: #15803d; }
+.status-err { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; }
+
+.help {
+    margin-top: 14px;
+    padding: 12px;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 4px;
+    font-size: 11.5px;
+    color: #78350f;
+    line-height: 1.5;
+}
+.help b { color: #b45309; }
+.help ol { margin: 6px 0 0 16px; padding: 0; }
+.help li { margin: 4px 0; }
+.help code {
+    background: #fff;
+    padding: 1px 4px;
+    border-radius: 2px;
+    font-family: ui-monospace, monospace;
+    font-size: 11px;
+    color: #0a1f44;
+}
+</style>
+</head>
+<body>
+<div class="header">
+    <div class="header-title">🛰️ PromHub Capturer</div>
+    <div class="header-subtitle">Налаштування з'єднання з сервером promv2</div>
+</div>
+
+<div class="field">
+    <label class="field-label">Сервер promv2 (URL api endpoint)</label>
+    <input type="text" class="field-input" id="serverUrl" placeholder="https://promv2.franya.dev/api/ajax_cabinet_template.php">
+</div>
+
+<div class="field">
+    <label class="field-label">Secret (з config.local.php → CABINET_TEMPLATE_SECRET)</label>
+    <input type="password" class="field-input" id="secret" placeholder="32 символи" autocomplete="off">
+    <div class="field-hint">Знайдіть CABINET_TEMPLATE_SECRET в <code>/var/www/.../config.local.php</code> на сервері promv2</div>
+</div>
+
+<button class="btn btn-primary" id="save">💾 Зберегти налаштування</button>
+<button class="btn btn-ghost" id="test">🧪 Перевірити з'єднання</button>
+
+<div class="status" id="status"></div>
+
+<div class="help">
+    <b>Як користуватися:</b>
+    <ol>
+        <li>Відкрийте <code>my.prom.ua</code> → будь-яке замовлення</li>
+        <li>Змініть товари / оплату / вставте посилання на чек — збережіть</li>
+        <li>Справа з'явиться панель PromHub з перехопленими запитами</li>
+        <li>Натисніть «Зберегти шаблон» — шаблон збережено на сервері promv2</li>
+        <li>Після цього кнопки «Редагувати товари», «Змінити оплату», «📎 Прив'язати чек» в модалці обробки замовлення будуть працювати автоматично</li>
+    </ol>
+    <br>
+    <b>Як отримати Secret:</b>
+    <ol>
+        <li>На сервері promv2 відкрийте <code>config.local.php</code></li>
+        <li>Знайдіть рядок <code>define('CABINET_TEMPLATE_SECRET', '...')</code></li>
+        <li>Якщо немає — згенеруйте: <code>php -r "echo bin2hex(random_bytes(16));"</code> і додайте</li>
+        <li>Вставте значення сюди</li>
+    </ol>
+</div>
+
+<script src="popup.js"></script>
+</body>
+</html>

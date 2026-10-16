@@ -1,0 +1,144 @@
+/* PromHub Capturer — overlay styles */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 14px;
+    color: #0a1f44;
+    background: #f5f6f8;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.ph-header {
+    background: #0a1f44;
+    color: #fff;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 2px solid #b8860b;
+}
+.ph-logo { display: flex; gap: 12px; align-items: center; }
+.ph-logo-mark {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, #b8860b, #d4a017);
+    color: #0a1f44;
+    border-radius: 6px;
+    display: grid; place-items: center;
+    font-weight: 800; font-size: 14px;
+}
+.ph-title { font-weight: 700; font-size: 15px; }
+.ph-subtitle { font-size: 11.5px; color: rgba(255,255,255,.7); margin-top: 2px; }
+.ph-close {
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.2);
+    color: #fff;
+    width: 28px; height: 28px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+}
+.ph-close:hover { background: rgba(255,255,255,.2); }
+
+.ph-body { flex: 1; overflow-y: auto; padding: 14px; }
+
+.ph-card {
+    background: #fff;
+    border: 1.5px solid #b8c2d4;
+    border-radius: 6px;
+    padding: 14px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(15,30,54,.06);
+}
+.ph-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+.ph-card-title {
+    font-weight: 700;
+    font-size: 13.5px;
+    color: #0a1f44;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+.ph-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 700;
+}
+.ph-badge-items { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+.ph-badge-payment { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+.ph-badge-receipt { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+
+.ph-field { margin: 6px 0; font-size: 12.5px; }
+.ph-field-k { color: #64748b; font-weight: 600; display: inline-block; min-width: 90px; }
+.ph-field-v { color: #0a1f44; font-weight: 600; }
+.ph-field-v.mono { font-family: ui-monospace, monospace; font-size: 11.5px; word-break: break-all; }
+.ph-field-v a { color: #2a4d85; text-decoration: none; }
+.ph-field-v a:hover { text-decoration: underline; }
+
+.ph-actions { display: flex; gap: 8px; margin-top: 12px; }
+.ph-btn {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1.5px solid transparent;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all .12s;
+}
+.ph-btn-primary {
+    background: #0a1f44;
+    color: #fff;
+    border-color: #0a1f44;
+}
+.ph-btn-primary:hover { background: #122a52; }
+.ph-btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+.ph-btn-gold {
+    background: #b8860b;
+    color: #fff;
+    border-color: #b8860b;
+}
+.ph-btn-gold:hover { background: #8a6608; }
+.ph-btn-ghost {
+    background: #fff;
+    color: #4d5b75;
+    border-color: #b8c2d4;
+}
+.ph-btn-ghost:hover { background: #f4f6fb; }
+
+.ph-empty {
+    text-align: center;
+    color: #64748b;
+    padding: 40px 20px;
+}
+.ph-empty-ic { font-size: 36px; margin-bottom: 8px; opacity: .5; }
+
+.ph-result {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: 4px;
+    font-size: 12.5px;
+    line-height: 1.5;
+}
+.ph-result-ok { background: #f0fdf4; border: 1px solid #bbf7d0; color: #15803d; }
+.ph-result-err { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; }
+
+.ph-footer {
+    padding: 10px 14px;
+    background: #fff;
+    border-top: 1px solid #d4a017;
+    font-size: 11.5px;
+    color: #64748b;
+    text-align: center;
+}
+.ph-status-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    background: #4ade80;
+    border-radius: 50%;
+    margin-right: 6px;
+}

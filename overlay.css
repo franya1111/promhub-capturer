@@ -70,6 +70,9 @@ body {
 .ph-badge-items { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
 .ph-badge-payment { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
 .ph-badge-receipt { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+.ph-badge-msg-send { background: #faf5ff; color: #7c3aed; border: 1px solid #ddd6fe; }
+.ph-badge-msg-get { background: #f5f3ff; color: #6d28d9; border: 1px solid #c4b5fd; }
+.ph-badge-rating { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
 
 .ph-field { margin: 6px 0; font-size: 12.5px; }
 .ph-field-k { color: #64748b; font-weight: 600; display: inline-block; min-width: 90px; }

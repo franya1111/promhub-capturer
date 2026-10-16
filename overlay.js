@@ -1,9 +1,12 @@
 /* PromHub Capturer — overlay logic */
 
 const TYPE_META = {
-  items:   { label: 'Редагування товарів', badge: 'ph-badge-items',   action: 'Зберегти шаблон товарів',   gold: false },
-  payment: { label: 'Зміна способу оплати', badge: 'ph-badge-payment', action: 'Зберегти шаблон оплати',   gold: false },
-  receipt: { label: 'Прив\'язка чека',     badge: 'ph-badge-receipt', action: 'Зберегти шаблон чека',     gold: true  },
+  items:          { label: 'Редагування товарів',     badge: 'ph-badge-items',    action: 'Зберегти шаблон товарів',     gold: false },
+  payment:        { label: 'Зміна способу оплати',    badge: 'ph-badge-payment',  action: 'Зберегти шаблон оплати',     gold: false },
+  receipt:        { label: 'Прив\'язка чека',         badge: 'ph-badge-receipt',  action: 'Зберегти шаблон чека',       gold: true  },
+  messages_send:  { label: 'Відправка повідомлення',  badge: 'ph-badge-msg-send',  action: 'Зберегти шаблон повідомлень', gold: false },
+  messages_get:   { label: 'Отримання повідомлень',   badge: 'ph-badge-msg-get',  action: 'Зберегти шаблон отримання',  gold: false },
+  buyer_rating:   { label: 'Рейтинг клієнта',         badge: 'ph-badge-rating',   action: 'Зберегти шаблон рейтингу',   gold: false },
 };
 
 const body = document.getElementById('ph-body');
@@ -12,7 +15,7 @@ const statusEl = document.getElementById('ph-status');
 let currentCandidates = {};
 
 function render() {
-  const types = ['items', 'payment', 'receipt'];
+  const types = ['items', 'payment', 'receipt', 'messages_send', 'messages_get', 'buyer_rating'];
   const hasAny = types.some(t => currentCandidates[t]);
 
   if (!hasAny) {
@@ -20,10 +23,13 @@ function render() {
       <div class="ph-empty">
         <div class="ph-empty-ic">🔍</div>
         <div>Запитів поки не перехоплено.</div>
-        <div style="font-size:12px;margin-top:8px">Відкрийте замовлення на my.prom.ua і виконайте:
+        <div style="font-size:12px;margin-top:8px">Відкрийте замовлення на my.prom.ua і виконайте будь-яку з дій:
           <br>• Зміну товарів
           <br>• Зміну способу оплати
           <br>• Прив'язку чека
+          <br>• Відправку повідомлення в чат
+          <br>• Відкриття чату (для отримання повідомлень)
+          <br>• Відкриття профілю клієнта (для рейтингу)
           <br>Запити автоматично з'являться тут.
         </div>
       </div>
@@ -56,17 +62,25 @@ function renderCard(type, c) {
   const urlShort = (c.url || '').slice(0, 60) + ((c.url || '').length > 60 ? '…' : '');
   let extra = '';
 
-  if (type === 'items' || type === 'payment') {
-    extra += `<div class="ph-field"><span class="ph-field-k">№ замовлення:</span> <span class="ph-field-v">${c.orderId || '—'}</span></div>`;
+  if (type === 'items' || type === 'payment' || type === 'messages_send') {
+    if (c.orderId) {
+      extra += `<div class="ph-field"><span class="ph-field-k">№ замовлення:</span> <span class="ph-field-v">${c.orderId}</span></div>`;
+    }
   }
   if (type === 'payment') {
     extra += `<div class="ph-field"><span class="ph-field-k">ID оплати:</span> <span class="ph-field-v">${c.paymentOptionId || '—'}</span></div>`;
   }
   if (type === 'receipt') {
-    extra += `<div class="ph-field"><span class="ph-field-k">Посилання чека:</span> <span class="ph-field-v mono">${c.receiptUrl || '—'}</span></div>`;
+    extra += `<div class="ph-field"><span class="ph-field-k">Посилання чека:</span> <span class="ph-field-v mono">${escapeHtml(c.receiptUrl || '—')}</span></div>`;
+  }
+  if (type === 'messages_send' && c.messageText) {
+    extra += `<div class="ph-field"><span class="ph-field-k">Текст:</span> <span class="ph-field-v">"${escapeHtml(c.messageText)}"</span></div>`;
+  }
+  if (type === 'buyer_rating') {
+    extra += `<div class="ph-field"><span class="ph-field-k">ID клієнта:</span> <span class="ph-field-v mono">${c.clientId || '—'}</span></div>`;
   }
   if (c.accountId) {
-    extra += `<div class="ph-field"><span class="ph-field-k">Аккаунт:</span> <span class="ph-field-v mono">${c.accountId}</span></div>`;
+    extra += `<div class="ph-field"><span class="ph-field-k">Аккаунт:</span> <span class="ph-field-v mono">${escapeHtml(c.accountId)}</span></div>`;
   }
 
   return `
@@ -108,6 +122,7 @@ function saveTemplate(type) {
     example_order_id: c.orderId || 0,
     example_receipt_url: c.receiptUrl || '',
     example_option_id: c.paymentOptionId || 0,
+    example_client_id: c.clientId || '',
   };
 
   window.parent.postMessage({ type: 'promhub_save', payload }, '*');

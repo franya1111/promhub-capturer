@@ -16,6 +16,9 @@
     items: null,
     payment: null,
     receipt: null,
+    messages_send: null,
+    messages_get: null,
+    buyer_rating: null,
   };
 
   // Патерни для класифікації запитів
@@ -37,6 +40,27 @@
       urlPatterns: [/receipt/i, /check/i, /fiscal/i, /order.*document/i, /order.*file/i],
       methodMatch: ['POST', 'PUT', 'PATCH'],
       bodyKeys: ['receipt', 'receipt_url', 'check_url', 'fiscal_code', 'document_url', 'url'],
+    },
+    // Відправка повідомлення в чат: URL містить chat/message, метод POST, тіло з text/body/message
+    messages_send: {
+      urlPatterns: [/chat/i, /message/i, /conversation/i],
+      methodMatch: ['POST', 'PUT'],
+      bodyKeys: ['body', 'text', 'message', 'content'],
+      excludeBodyKeys: ['products', 'items'], // щоб не плутати з items
+    },
+    // Отримання повідомлень: URL з chat/message, метод GET (або POST з пустим тілом)
+    messages_get: {
+      urlPatterns: [/chat/i, /message/i, /conversation/i, /messages\/list/i],
+      methodMatch: ['GET', 'POST'],
+      bodyKeys: [], // для GET-запитів тіла нема
+      isGet: true,
+    },
+    // Рейтинг клієнта: URL з clients/ або buyer, метод GET
+    buyer_rating: {
+      urlPatterns: [/\/clients?\/\d+/i, /client.*rating/i, /buyer.*rating/i, /reliability/i, /\/crm\/clients/i],
+      methodMatch: ['GET'],
+      bodyKeys: [],
+      isGet: true,
     },
   };
 
@@ -78,14 +102,28 @@
     for (const [type, pat] of Object.entries(PATTERNS)) {
       if (!pat.methodMatch.includes(m)) continue;
       const urlMatches = pat.urlPatterns.some(p => p.test(url));
-      const bodyMatches = bodyObj && pat.bodyKeys.some(k =>
-        Object.prototype.hasOwnProperty.call(bodyObj, k) ||
-        (typeof bodyObj === 'object' && containsKeyDeep(bodyObj, k))
-      );
-      // Для items/payment важливий URL з order_id; для receipt — тіло з url/receipt
-      if (type === 'receipt' && bodyMatches) return type;
-      if ((type === 'items' || type === 'payment') && urlMatches && bodyMatches) return type;
-      if (type === 'items' && urlMatches && bodyObj && pat.bodyKeys.some(k => containsKeyDeep(bodyObj, k))) return type;
+
+      // GET-запити (messages_get, buyer_rating) — перевіряємо тільки URL
+      if (pat.isGet && urlMatches && m === 'GET') {
+        return type;
+      }
+
+      // POST/PUT — перевіряємо тіло
+      if (!pat.isGet && pat.bodyKeys.length) {
+        const bodyMatches = bodyObj && pat.bodyKeys.some(k =>
+          Object.prototype.hasOwnProperty.call(bodyObj, k) ||
+          (typeof bodyObj === 'object' && containsKeyDeep(bodyObj, k))
+        );
+        // Перевірка виключень (щоб messages_send не спрацьовувало на items)
+        if (pat.excludeBodyKeys && pat.excludeBodyKeys.some(k => containsKeyDeep(bodyObj, k))) {
+          continue;
+        }
+        if (urlMatches && bodyMatches) return type;
+        // Для receipt — достатньо тіла з url
+        if (type === 'receipt' && bodyMatches && !pat.excludeBodyKeys) return type;
+        // Для messages_send — достатньо URL з chat + тіло з text/body
+        if (type === 'messages_send' && bodyMatches && (urlMatches || /chat|message/i.test(url))) return type;
+      }
     }
     return null;
   }
@@ -118,6 +156,29 @@
     for (const k of keys) {
       if (typeof bodyObj[k] === 'string' && bodyObj[k].startsWith('http')) return bodyObj[k];
       if (typeof bodyObj[k] === 'string' && bodyObj[k].length > 10) return bodyObj[k];
+    }
+    return '';
+  }
+
+  // Витягнути client_id з URL /clients/123456... або з тіла
+  function extractClientId(url, bodyObj) {
+    const m = url.match(/\/clients?\/(\d+)/);
+    if (m) return m[1];
+    if (bodyObj) {
+      if (bodyObj.client_id) return String(bodyObj.client_id);
+      if (bodyObj.id) return String(bodyObj.id);
+    }
+    return '';
+  }
+
+  // Витягнути текст повідомлення з тіла (для messages_send)
+  function extractMessageText(bodyObj) {
+    if (!bodyObj) return '';
+    const keys = ['body', 'text', 'message', 'content'];
+    for (const k of keys) {
+      if (typeof bodyObj[k] === 'string' && bodyObj[k].trim() !== '') {
+        return bodyObj[k].slice(0, 100);
+      }
     }
     return '';
   }
@@ -179,11 +240,16 @@
     const orderId = extractOrderId(details.url, bodyObj);
     const receiptUrl = type === 'receipt' ? extractReceiptUrl(bodyObj) : '';
     const paymentOpt = type === 'payment' ? extractPaymentOptionId(bodyObj) : 0;
+    const clientId = (type === 'buyer_rating') ? extractClientId(details.url, bodyObj) : '';
+    const msgText = (type === 'messages_send') ? extractMessageText(bodyObj) : '';
     const accountId = extractAccountId(details.url);
 
+    // Валідація по типу
     if (type === 'items' && !orderId) return;
     if (type === 'receipt' && !receiptUrl) return;
     if (type === 'payment' && !paymentOpt) return;
+    if (type === 'buyer_rating' && !clientId) return;
+    // messages_send / messages_get — order_id необов'язковий (може бути глобальний чат)
 
     candidates[type] = {
       type,
@@ -197,6 +263,8 @@
       orderId,
       receiptUrl,
       paymentOptionId: paymentOpt,
+      clientId,
+      messageText: msgText,
       curl: buildCurl(details),
     };
 
@@ -247,7 +315,7 @@
       }
     } catch {}
 
-    if (url && isPromHost(url) && method !== 'GET') {
+    if (url && isPromHost(url)) {
       const bodyObj = parseBody(body);
       const type = matchType(method, url, bodyObj);
       if (type) {
@@ -278,7 +346,7 @@
   };
 
   XMLHttpRequest.prototype.send = function (body) {
-    if (this._phUrl && isPromHost(this._phUrl) && this._phMethod !== 'GET') {
+    if (this._phUrl && isPromHost(this._phUrl)) {
       const bodyStr = typeof body === 'string' ? body : (body ? JSON.stringify(body) : '');
       const bodyObj = parseBody(bodyStr);
       const type = matchType(this._phMethod, this._phUrl, bodyObj);
